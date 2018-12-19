@@ -9,7 +9,6 @@ Glossary:
 
 """
 from typing import *
-import itertools
 
 ## Types
 ValueType = TypeVar('ValueType') # Type of values being solved for.
@@ -169,47 +168,3 @@ def values_unique_set_constraint():
 
     return func
 
-if __name__=='__main__':
-    print("Solving for x in [1,2] and y in [3, 4] without constraints.")
-    for solution in solve(
-    {
-        'x': [1, 2],
-        'y': [3, 4]
-    }):
-        print(solution)
-
-#####
-    print("Solving for values of x and y in range(1, 5) where x!=y:")
-    for solution in solve(
-    {
-        'x': [1, 2, 3, 4],
-        'y': [1, 2, 3, 4]
-    },
-    domain_constraints=[all_unique_in_domain_constraint,]):
-        print(solution)
-    
-#####
-    print("Solving a unique solution to the 4 queens problem:")
-    domain = list(range(0, 4))
-    
-    x_coords = ["x1", "x2", "x3", "x4"]
-    y_coords = ["y1", "y2", "y3", "y4"]
-    pieces = zip(x_coords, y_coords)
-    
-    for solution in solve(
-    {
-        'x1': domain,
-        'y1': domain,
-        'x2': domain,
-        'y2': domain,
-        'x3': domain,
-        'y3': domain,
-        'x4': domain,
-        'y4': domain,
-    },
-    [vars_not_equal_domain_constraint(a, b) for a, b in itertools.permutations(x_coords, 2) if a != b]
-    + [vars_not_equal_domain_constraint(a, b) for a, b in itertools.permutations(y_coords, 2) if a != b]
-    + [vars_not_diagonal_on_grid_domain_constraint(*a, *b) for a, b in itertools.permutations(pieces, 2) if a != b],
-    [values_unique_set_constraint(),]
-    ):
-        print(solution)
