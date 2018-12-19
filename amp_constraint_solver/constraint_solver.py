@@ -1,7 +1,22 @@
 """
 # Constraint solving using domain reduction.
 
-Glossary:
+eg. 
+```
+from amp_constraint_solver import solve 
+
+def constraint1(b, **variables):
+    return variables['a'] != 5 and b != 3
+
+constraint2 = lambda a, b: a != b
+
+for solution in solve({'a': [1, 5], 'b': [1, 2, 3]}, [constraint1, constraint2]):
+   print(solution)
+```
+
+"""
+"""
+# Glossary:
 	* variables: Things that are assigned values in a possible solution.
 	* values: Possible values for variables in a solution.
 	* domains: Bags of possible valid values for a variable.
@@ -50,8 +65,16 @@ def _check_constraints(
             else []
         )
 
-        # If the function globs **kwargs, supply all variables.
-        all_vars = variables if argspec.varkw is not None else {}
+        # If the function globs **kwargs, supply all variables not already passed as kwargs.
+        all_vars = dict(
+            [
+                (key, value)
+                for key, value in variables.items()
+                if key not in argspec.args
+            ]
+            if argspec.varkw is not None
+            else {}
+        )
 
         if len(args) < len(argspec.args):
             # Not all needed variables are assigned a value yet.
@@ -73,7 +96,10 @@ def solve(
     _depth: int = 0,
     sorted_function: Callable = sorted,
 ) -> SolutionGenerator:
-    """A recursive generator function that yields solutions to a constraint solving problem using domain reduction."""
+    """
+        A recursive generator function that yields solutions to a constraint solving problem using domain reduction.
+        eg. solve({'a': [1, 2], 'b': [1, 2]}, [lambda a, b: a > b])
+    """
     if _current_solution is None:
         _current_solution = dict()
 
@@ -102,7 +128,7 @@ def solve(
             )
 
 
-def no_duplicate_values_constraint(variables) -> bool:
+def no_duplicate_values_constraint(**variables) -> bool:
     """A function that ensures that values are assigned to only one domain at a time."""
     for var1, value1 in variables.items():
         for var2, value2 in variables.items():

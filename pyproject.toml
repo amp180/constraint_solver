@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "amp_constraint_solver"
-version = "0.3.0"
+version = "0.3.1"
 description = "A domain reduction constraint solver."
 authors = ["Adam Pegman <adam:pegman.space>"]
 license = "MIT"

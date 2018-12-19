@@ -102,6 +102,16 @@ class ConstraintSolverTests(unittest.TestCase):
             reference_4_queens_solution in solutions
         ), "Handchecked solution was not found in solutions."
 
+    def test_kwargs_not_passed_twice(self):
+        def constraint1(b, **variables):
+            return variables["a"] != 5 and b != 2
+
+        constraint2 = lambda a, b: a != b
+        for solution in solve(
+            {"a": [1, 5], "b": [1, 2, 3]}, [constraint1, constraint2]
+        ):
+            assert solution == {"a": 1, "b": 3}
+
 
 if __name__ == "__main__":
     unittest.main()
