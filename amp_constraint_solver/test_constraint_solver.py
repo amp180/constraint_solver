@@ -1,6 +1,6 @@
 import unittest
 import itertools
-from constraint_solver.constraint_solver import *
+from amp_constraint_solver.constraint_solver import *
 
 reference_4_queens_solution = {
     "x1": 0,

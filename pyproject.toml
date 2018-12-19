@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "constraint_solver"
+name = "amp_constraint_solver"
 version = "0.3.0"
 description = "A domain reduction constraint solver."
 authors = ["Adam Pegman <adam:pegman.space>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.6.5"
+python = "^3.6.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.650.0"

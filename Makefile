@@ -1,20 +1,20 @@
 
-.PHONY: install build format typecheck test
+.PHONY: installdeps build format typecheck test
 
-install: build
-	poetry install
-
-build: format typecheck test
+build: installdeps format typecheck test
 	poetry build
 
-test:
+test: installdeps
 	poetry run python -m unittest discover
 
-typecheck:
-	poetry run python -m mypy constraint_solver
+typecheck: installdeps
+	poetry run python -m mypy amp_constraint_solver
 
-format:
+format: installdeps
 	poetry run python -m black .
+
+installdeps:
+	poetry install
 
 clean:
 	rm -rf ./**/__pycache__ ./**/.mypy_cache *.egg-info ./**/.pyc ./dist/
