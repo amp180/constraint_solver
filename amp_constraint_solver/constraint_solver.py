@@ -32,23 +32,29 @@ DomainsType = Dict[str, Domain]
 # Mapping of variables to values (possible solution).
 SolutionsType = Dict[str, ValueType]
 # Function that partially checks if a possible solution is valid.
-SolutionConstraint = Callable[..., bool]
+Constraint = Callable[..., bool]
 # Type returned by the solve function.
 SolutionGenerator = Generator[SolutionsType, None, None]
 
 
 def _assert_domain(domain: Domain):
     """Function that checks if a list is a valid domain."""
-    assert isinstance(domain, list), f"Domain must be a list, { domain }."
+    assert isinstance(domain, list), f"Domain must be a list, not { type(domain) }."
     assert len(domain) == len(
         set(domain)
     ), f"Values in domain should be unique. \n{ domain }"
-    return None
+    assert len(domain) > 0, "Domains cannot be empty."
 
 
-def _check_constraints(
-    variables: SolutionsType, constraints: List[SolutionConstraint]
-) -> bool:
+def _assert_constraint(constraint: Constraint, domains: DomainsType):
+    """Function that checks if a constraint is valid."""
+    assert callable(constraint), f"Constrints must be callable, {constraint}"
+    argspec = _getfullargspec(constraint)
+    for arg in argspec.args:
+        assert arg in domains.keys(), f"{arg} is not a known variable."
+
+
+def _check_constraints(variables: SolutionsType, constraints: List[Constraint]) -> bool:
     """Function to check that a list of solution constraint checks are satisfied by a solution."""
     for constraint in constraints:
         # Inspect the function
@@ -85,7 +91,7 @@ def _check_constraints(
 
 def solve(
     domains: DomainsType,
-    constraints: List[SolutionConstraint] = [],
+    constraints: List[Constraint] = [],
     *,
     _sorted_variables=None,
     _current_solution: SolutionsType = None,
@@ -93,11 +99,24 @@ def solve(
     sorted_function: Callable = sorted,
 ) -> SolutionGenerator:
     """
-        A recursive generator function that yields solutions to a constraint solving problem using domain reduction.
+        A recursive generator function that yields solutions to a constraint solving problem,
+        using domain reduction.
         eg. solve({'a': [1, 2], 'b': [1, 2]}, [lambda a, b: a > b])
     """
     if _current_solution is None:
         _current_solution = dict()
+
+    if _depth == 0:
+        # Assert domains are valid.
+        assert isinstance(
+            domains, Dict
+        ), "The domains arg must be a dict of str to list."
+        assert len(domains.items()) > 0, "Domains dictionary cannot be empty."
+        for domain_to_check in domains.values():
+            _assert_domain(domain_to_check)
+        # Assert constraints are valid
+        for constraint_to_check in constraints:
+            _assert_constraint(constraint_to_check, domains)
 
     if _depth == len(domains):
         # Base case, all variables have been assigned and checked.
@@ -108,7 +127,7 @@ def solve(
     sorted_variables = _sorted_variables or sorted_function(domains.keys())
     current_var = sorted_variables[_depth]
     current_domain = domains[current_var]
-    _assert_domain(current_domain)  # Assert current domain is valid.
+
     for value in current_domain:
         # Create a new partial solution and check against constraints.
         current_solution = dict(_current_solution)

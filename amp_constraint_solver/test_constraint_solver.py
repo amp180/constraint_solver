@@ -112,6 +112,18 @@ class ConstraintSolverTests(unittest.TestCase):
         ):
             assert solution == {"a": 1, "b": 3}
 
+    def test_no_domains(self):
+        test_empty = lambda: list(solve({}))
+        self.assertRaises(AssertionError, test_empty)
+
+    def test_invalid_domain(self):
+        test_invalid = lambda: list(solve({"x": []}))
+        self.assertRaises(AssertionError, test_invalid)
+
+    def test_invalid_constraint(self):
+        wrong_arg = lambda: list(solve({"x": [1]}, [lambda z: True]))
+        self.assertRaises(AssertionError, wrong_arg)
+
 
 if __name__ == "__main__":
     unittest.main()
