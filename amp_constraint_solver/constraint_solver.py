@@ -1,9 +1,9 @@
 """
 # Constraint solving using domain reduction.
 
-eg. 
+eg.
 ```
-from amp_constraint_solver import solve 
+from amp_constraint_solver import solve
 
 def constraint1(b, **variables):
     return variables['a'] != 5 and b != 3
@@ -155,9 +155,9 @@ def make_vars_not_diagonal_on_grid_constraint(x1: str, y1: str, x2: str, y2: str
         variables = _cast(Dict[str, int], variables)
         # diagonal on a grid is when abs(x1-x2) == abs(y1-y2)
         if all([key in variables for key in (x1, y1, x2, y2)]):
-            return abs(variables[x1] - variables[x2]) != abs(
-                variables[y1] - variables[y2]
-            )
+            diff1 = abs(variables[x1] - variables[x2])
+            diff2 = abs(variables[y1] - variables[y2])
+            return diff1 != diff2
         else:
             return True
 
