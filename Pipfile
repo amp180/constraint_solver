@@ -6,9 +6,11 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
+yapf = "*"
 
 [requires]
 python_version = "3.7"
 
 [scripts]
 "test" = "python3 -m unittest discover -b"
+"format" = "python -m yapf -i --style=google -r constraint_solver"
