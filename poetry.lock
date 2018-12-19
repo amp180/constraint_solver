@@ -37,7 +37,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "7.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Optional static typing for Python"
 name = "mypy"
 optional = false
@@ -49,7 +49,7 @@ mypy-extensions = ">=0.4.0,<0.5.0"
 typed-ast = ">=1.1.0,<1.2.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Experimental type system extensions for programs checked with the mypy typechecker."
 name = "mypy-extensions"
 optional = false
@@ -65,7 +65,7 @@ python-versions = "*"
 version = "0.10.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "a fork of Python 2 and 3 ast modules with type comment support"
 name = "typed-ast"
 optional = false
@@ -73,7 +73,7 @@ python-versions = "*"
 version = "1.1.1"
 
 [metadata]
-content-hash = "da4b368c05cc44212743307af197c8bcf2d675c93f8eac51db836f4d2d87c8cf"
+content-hash = "97ecc67db4adf4560e71c63cd6cdaceccda7d33800dc38ae215a530ddda3392f"
 python-versions = "^3.6.5"
 
 [metadata.hashes]

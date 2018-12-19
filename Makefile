@@ -14,4 +14,4 @@ format:
 	poetry run python -m black .
 
 clean:
-	rm -rf ./**/__pycache__ ./**/.mypy_cache ./**/.pyc ./dist/
+	rm -rf ./**/__pycache__ ./**/.mypy_cache *.egg-info ./**/.pyc ./dist/
