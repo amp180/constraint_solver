@@ -54,6 +54,20 @@ def _assert_constraint(constraint: Constraint, domains: DomainsType):
         assert arg in domains.keys(), f"{arg} is not a known variable."
 
 
+def _assert_domains_and_constraints(
+    domains: DomainsType, constraints: List[Constraint]
+):
+    """A function to assert that a group of domains and constraints are valid."""
+    # Assert domains are valid.
+    assert isinstance(domains, Dict), "The domains arg must be a dict of str to list."
+    assert len(domains.items()) > 0, "Domains dictionary cannot be empty."
+    for domain_to_check in domains.values():
+        _assert_domain(domain_to_check)
+    # Assert constraints are valid
+    for constraint_to_check in constraints:
+        _assert_constraint(constraint_to_check, domains)
+
+
 def _check_constraints(variables: SolutionsType, constraints: List[Constraint]) -> bool:
     """Function to check that a list of solution constraint checks are satisfied by a solution."""
     for constraint in constraints:
@@ -107,16 +121,8 @@ def solve(
         _current_solution = dict()
 
     if _depth == 0:
-        # Assert domains are valid.
-        assert isinstance(
-            domains, Dict
-        ), "The domains arg must be a dict of str to list."
-        assert len(domains.items()) > 0, "Domains dictionary cannot be empty."
-        for domain_to_check in domains.values():
-            _assert_domain(domain_to_check)
-        # Assert constraints are valid
-        for constraint_to_check in constraints:
-            _assert_constraint(constraint_to_check, domains)
+        # Assert args are valid
+        _assert_domains_and_constraints(domains, constraints)
 
     if _depth == len(domains):
         # Base case, all variables have been assigned and checked.
@@ -144,7 +150,7 @@ def solve(
 
 
 def no_duplicate_values_constraint(**variables) -> bool:
-    """A function that ensures that values are assigned to only one domain at a time."""
+    """A function that ensures that values are assigned to only one variable at a time."""
     for var1, value1 in variables.items():
         for var2, value2 in variables.items():
             if var1 != var2:
@@ -154,7 +160,7 @@ def no_duplicate_values_constraint(**variables) -> bool:
 
 
 def make_vars_not_equal_constraint(var1: str, var2: str):
-    """A function that checks if all values are assigned to only one variable at a time."""
+    """A function that creates a constraint that two variables are different."""
 
     def not_equal(**variables) -> bool:
         f"Ensuring {var1} and {var2} are not equal."
