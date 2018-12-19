@@ -43,7 +43,7 @@ class ConstraintSolverTests(unittest.TestCase):
         assert solutions, f"There should be a solution, \n{solutions}\n"
         assert (
             solutions == reference_x_ne_y_solutions
-        ), "Solution should match reference"
+        ), "Solution should match reference, \n{solutions}\n"
 
     def test_lambda_solve_x_ne_y(self):
         print("Testing that lambdas work:")
@@ -54,7 +54,7 @@ class ConstraintSolverTests(unittest.TestCase):
         assert solutions, f"There should be a solution, \n{solutions}\n"
         assert (
             solutions == reference_x_ne_y_solutions
-        ), "Solution should match reference"
+        ), "Solution should match reference, \n{solutions}\n"
 
     def test_solve_4_queens(self):
         print("Solving for 2d coordinates that solve the 4 queens problem:")
@@ -97,7 +97,7 @@ class ConstraintSolverTests(unittest.TestCase):
         print(solutions[0])
         assert (
             len(solutions) == 48
-        ), "There are 2 solutions and 4! ways of arranging the variables."
+        ), "There are 2 solutions and 4! ways of arranging the variables for a solution."
         assert (
             reference_4_queens_solution in solutions
         ), "Handchecked solution was not found in solutions."
