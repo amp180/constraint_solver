@@ -9,6 +9,7 @@ Glossary:
 
 """
 from typing import *
+from inspect import getfullargspec
 
 ## Types
 # Type of values being solved for.
@@ -38,7 +39,29 @@ def _check_constraints(
     variables: SolutionsType, constraints: List[SolutionConstraint]
 ) -> bool:
     """Function to check that a list of solution constraint checks are satisfied by a solution."""
-    return all([constraint(**variables) for constraint in constraints])
+    for constraint in constraints:
+        # Inspect the function
+        argspec = getfullargspec(constraint)
+
+        # Build a list of positional args that match variable names
+        args = (
+            [variables[arg] for arg in argspec.args if arg in variables]
+            if argspec.args
+            else []
+        )
+
+        # If the function globs **kwargs, supply all variables.
+        all_vars = variables if argspec.varkw is not None else {}
+
+        if len(args) < len(argspec.args):
+            # Not all needed variables are assigned a value yet.
+            continue
+
+        # Call the constraint and return false only if the check fails.
+        if not constraint(*args, **all_vars):
+            return False
+
+    return True
 
 
 def solve(
@@ -79,10 +102,10 @@ def solve(
             )
 
 
-def constraint_no_duplicate_values(**values) -> bool:
+def constraint_no_duplicate_values(variables) -> bool:
     """A function that ensures that values are assigned to only one domain at a time."""
-    for var1, value1 in values.items():
-        for var2, value2 in values.items():
+    for var1, value1 in variables.items():
+        for var2, value2 in variables.items():
             if var1 != var2:
                 if value1 == value2:
                     return False
@@ -92,7 +115,7 @@ def constraint_no_duplicate_values(**values) -> bool:
 def make_vars_not_equal_constraint(var1: str, var2: str):
     """A function that checks if all values are assigned to only one variable at a time."""
 
-    def not_equal(**variables: SolutionsType) -> bool:
+    def not_equal(**variables) -> bool:
         f"Ensuring {var1} and {var2} are not equal."
         if all([key in variables for key in (var1, var2)]):
             if variables[var1] == variables[var2]:

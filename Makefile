@@ -1,7 +1,7 @@
 
 .PHONY: build format typecheck test
 
-build: typecheck test 
+build: format typecheck test 
 	poetry build
 
 test:

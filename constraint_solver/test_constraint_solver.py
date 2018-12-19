@@ -45,6 +45,17 @@ class ConstraintSolverTests(unittest.TestCase):
             solutions == reference_x_ne_y_solutions
         ), "Solution should match reference"
 
+    def test_lambda_solve_x_ne_y(self):
+        print("Testing that lambdas work:")
+        solutions = list(
+            solve({"x": [1, 2], "y": [1, 2]}, constraints=[(lambda x, y: x != y)])
+        )
+        print(solutions)
+        assert solutions, f"There should be a solution, \n{solutions}\n"
+        assert (
+            solutions == reference_x_ne_y_solutions
+        ), "Solution should match reference"
+
     def test_solve_4_queens(self):
         print("Solving for 2d coordinates that solve the 4 queens problem:")
         domain = list(range(0, 4))
