@@ -8,8 +8,8 @@ Glossary:
 	* constraints: Conditions that are used to check if solutions are valid.
 
 """
-from typing import *
-from inspect import getfullargspec
+from typing import cast as _cast, TypeVar, List, Dict, Set, Callable, Generator
+from inspect import getfullargspec as _getfullargspec
 
 ## Types
 # Type of values being solved for.
@@ -41,7 +41,7 @@ def _check_constraints(
     """Function to check that a list of solution constraint checks are satisfied by a solution."""
     for constraint in constraints:
         # Inspect the function
-        argspec = getfullargspec(constraint)
+        argspec = _getfullargspec(constraint)
 
         # Build a list of positional args that match variable names
         args = (
@@ -102,7 +102,7 @@ def solve(
             )
 
 
-def constraint_no_duplicate_values(variables) -> bool:
+def no_duplicate_values_constraint(variables) -> bool:
     """A function that ensures that values are assigned to only one domain at a time."""
     for var1, value1 in variables.items():
         for var2, value2 in variables.items():
@@ -130,7 +130,7 @@ def make_vars_not_diagonal_on_grid_constraint(x1: str, y1: str, x2: str, y2: str
 
     def not_diagonal(**variables) -> bool:
         f"Ensure ({x1}, {y1}) is not diagonal with ({x2}, {y2})"
-        variables = cast(Dict[str, int], variables)
+        variables = _cast(Dict[str, int], variables)
         # diagonal on a grid is when abs(x1-x2) == abs(y1-y2)
         if all([key in variables for key in (x1, y1, x2, y2)]):
             return abs(variables[x1] - variables[x2]) != abs(

@@ -1,7 +1,10 @@
 
-.PHONY: build format typecheck test
+.PHONY: install build format typecheck test
 
-build: format typecheck test 
+install: build
+	poetry install
+
+build: format typecheck test
 	poetry build
 
 test:
