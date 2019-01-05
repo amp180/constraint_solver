@@ -4,3 +4,4 @@
 **/*.pyc
 *.pyc
 dist/
+dist/**
