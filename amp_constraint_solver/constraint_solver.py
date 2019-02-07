@@ -1,39 +1,68 @@
 """
-# Constraint solving using domain reduction.
+Contains implementation of a domain reduction constraint resolver.
 
-eg.
-```
-from amp_constraint_solver import solve
+Usage of :py:func:`solve`:
 
-def constraint1(b, **variables):
-    return variables['a'] != 5 and b != 3
+>>> from amp_constraint_solver import solve 
+>>> def constraint1(b, **variables):
+...     return variables['a'] != 5 and b != 3
+... 
+>>> constraint2 = lambda a, b: a == b 
+>>> for solution in solve({'a': [1, 5], 'b': [1, 2, 3]}, [constraint1, constraint2]):
+...    print(solution)
+... 
+{'a': 1, 'b': 1}
 
-constraint2 = lambda a, b: a != b
+Glossary: 
 
-for solution in solve({'a': [1, 5], 'b': [1, 2, 3]}, [constraint1, constraint2]):
-   print(solution)
-```
+- variables: Things that are assigned values in a possible solution.
+- values: Possible values for variables in a solution.
+- domains: Bags of possible valid values for a variable.
+- constraints: Conditions that are used to check if solutions are valid.
 
-* variables: Things that are assigned values in a possible solution.
-* values: Possible values for variables in a solution.
-* domains: Bags of possible valid values for a variable.
-* constraints: Conditions that are used to check if solutions are valid.
+.. py:class:: ValueType
+   A type variable. Type of values being solved for. Used in the following generic types.
+
+.. py:class:: Domain
+   Type annotation for a list of values that can be assigned to a variable.
+
+.. py:class:: DomainsType
+   Type annotation for a dictionary of variable names mapped to a list of possible values (a domain).
+
+.. py:class:: SolutionsType
+   Type annotation for a dictionary of variable names mapped to values (a candidate solution.)
+
+.. py:class:: Constraint
+   Type annotation for a function that takes in parameters that share their name and type with variables
+   being solved for (or takes kwargs) and returns bool. Used to check if a solution is valid.
+   Should return true if valid arguments are passed, otherwise false.
+
+.. py:class:: SolutionGenerator
+   The type returned by `solve`, It's a generator of dicts that map variables to values 
+   (a generator of SolutionType.).
+
 """
-from typing import cast as _cast, TypeVar, List, Dict, Set, Callable, Generator
+from typing import cast as _cast, TypeVar, List, Dict, Set, Callable, Generator, Any
 from inspect import getfullargspec as _getfullargspec
 
+
+__all__ = [
+    "solve",
+    "ValueType",
+    "Domain",
+    "DomainsType",
+    "SolutionsType",
+    "Constraint",
+    "SolutionGenerator",
+]
+
+
 ## Types
-# Type of values being solved for.
 ValueType = TypeVar("ValueType")
-# Domain of candidate values to select a variable value from.
 Domain = List[ValueType,]
-# Mapping of variables to domains.
 DomainsType = Dict[str, Domain]
-# Mapping of variables to values (possible solution).
 SolutionsType = Dict[str, ValueType]
-# Function that partially checks if a possible solution is valid.
 Constraint = Callable[..., bool]
-# Type returned by the solve function.
 SolutionGenerator = Generator[SolutionsType, None, None]
 
 
@@ -110,12 +139,23 @@ def solve(
     _sorted_variables=None,
     _current_solution: SolutionsType = None,
     _depth: int = 0,
-    sorted_function: Callable = sorted,
+    sorted_function=sorted,
 ) -> SolutionGenerator:
     """
         A recursive generator function that yields solutions to a constraint solving problem,
         using domain reduction.
-        eg. solve({'a': [1, 2], 'b': [1, 2]}, [lambda a, b: a > b])
+
+        eg.
+
+        >>> from amp_constraint_solver import solve
+        >>> list(solve({'a': [1, 2], 'b': [1, 2]}, [(lambda a, b: a > b),]))
+        [{'a': 2, 'b': 1}]
+
+
+        :param domains: A dict of variable names to lists of possible assignments, :py:class:`DomainsType`.
+        :param constraints: A list of :py:class:`Constraint` functions to check possible solutions.
+        :param sorted_function: Can be used to override what order variables are assigned in. 
+        :returns: A generator of candidate solutions. :py:data:`SolutionGenerator`
     """
     if _current_solution is None:
         _current_solution = dict()
@@ -147,43 +187,3 @@ def solve(
                 _current_solution=current_solution,
                 _depth=_depth + 1,
             )
-
-
-def no_duplicate_values_constraint(**variables) -> bool:
-    """A function that ensures that values are assigned to only one variable at a time."""
-    for var1, value1 in variables.items():
-        for var2, value2 in variables.items():
-            if var1 != var2:
-                if value1 == value2:
-                    return False
-    return True
-
-
-def make_vars_not_equal_constraint(var1: str, var2: str):
-    """A function that creates a constraint that two variables are different."""
-
-    def not_equal(**variables) -> bool:
-        f"Ensuring {var1} and {var2} are not equal."
-        if all([key in variables for key in (var1, var2)]):
-            if variables[var1] == variables[var2]:
-                return False
-        return True
-
-    return not_equal
-
-
-def make_vars_not_diagonal_on_grid_constraint(x1: str, y1: str, x2: str, y2: str):
-    """Creates a constraint that checks that (x1, y1) is not diagonal with (x2, y2) on a positive grid."""
-
-    def not_diagonal(**variables) -> bool:
-        f"Ensure ({x1}, {y1}) is not diagonal with ({x2}, {y2})"
-        variables = _cast(Dict[str, int], variables)
-        # diagonal on a grid is when abs(x1-x2) == abs(y1-y2)
-        if all([key in variables for key in (x1, y1, x2, y2)]):
-            diff1 = abs(variables[x1] - variables[x2])
-            diff2 = abs(variables[y1] - variables[y2])
-            return diff1 != diff2
-        else:
-            return True
-
-    return not_diagonal

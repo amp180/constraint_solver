@@ -1,22 +1,22 @@
-"""
-# Constraint solving using domain reduction.
+r"""
+Constraint solving using domain reduction.
 
-eg. 
-```
-from amp_constraint_solver import solve 
+Imports * from :py:mod:`amp_constraint_solver.constraint_solver` and :py:mod:`amp_constraint_solver.builtin_constraints`.
 
-def constraint1(b, **variables):
-    return variables['a'] != 5 and b != 3
+Usage of :py:func:`amp_constraint_solver.constraint_solver.solve`:
 
-constraint2 = lambda a, b: a != b
+>>> from amp_constraint_solver import solve 
+>>> def constraint1(b, **variables):
+...     return variables['a'] != 5 and b != 3
+... 
+>>> constraint2 = lambda a, b: a != b 
+>>> for solution in solve({'a': [1, 5], 'b': [1, 2, 3]}, [constraint1, constraint2]):
+...    print(solution)
+... 
+{'a': 1, 'b': 2}
 
-for solution in solve({'a': [1, 5], 'b': [1, 2, 3]}, [constraint1, constraint2]):
-   print(solution)
-```
-
-* variables: Things that are assigned values in a possible solution.
-* values: Possible values for variables in a solution.
-* domains: Bags of possible valid values for a variable.
-* constraints: Conditions that are used to check if solutions are valid.
 """
 from .constraint_solver import *
+from .builtin_constraints import *
+
+__version__ = "0.3.2"

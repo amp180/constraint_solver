@@ -1,6 +1,7 @@
 import unittest
 import itertools
 from amp_constraint_solver.constraint_solver import *
+from amp_constraint_solver.builtin_constraints import *
 
 reference_4_queens_solution = {
     "x1": 0,
@@ -23,6 +24,7 @@ reference_cartesian_product_solution = [
 
 class ConstraintSolverTests(unittest.TestCase):
     def test_cartesian_product(self):
+        """A test to check that all solutions are visited."""
         print("Solving for x in [1,2] and y in [3, 4] without constraints.")
         solutions = list(solve({"x": [1, 2], "y": [3, 4]}))
         print(solutions)
@@ -32,6 +34,8 @@ class ConstraintSolverTests(unittest.TestCase):
         ), "Solutions should form a cartesian product."
 
     def test_solve_x_ne_y(self):
+        """A test to check that the solver works correctly with a 
+           :py:func:`amp_constraint_solver.builtin_constraints.make_vars_not_equal_constraint`."""
         print("Solving for values of x and y in range(1, 2) where x!=y:")
         solutions = list(
             solve(
@@ -46,6 +50,9 @@ class ConstraintSolverTests(unittest.TestCase):
         ), "Solution should match reference, \n{solutions}\n"
 
     def test_lambda_solve_x_ne_y(self):
+        """A test to check that the solver works correctly with lambdas 
+           and can discover how to call them from their parameter names.
+        """
         print("Testing that lambdas work:")
         solutions = list(
             solve({"x": [1, 2], "y": [1, 2]}, constraints=[(lambda x, y: x != y)])
@@ -57,6 +64,12 @@ class ConstraintSolverTests(unittest.TestCase):
         ), "Solution should match reference, \n{solutions}\n"
 
     def test_solve_4_queens(self):
+        """Test the solver against a reference solution to the 4 queens problem.
+
+           Tests that :py:func:`amp_constraint_solver.builtin_constraints.make_vars_not_diagonal_on_grid_constraint`
+           and :py:func:`amp_constraint_solver.builtin_constraints.make_vars_not_equal_constraint`
+           work with the solver.
+        """
         print("Solving for 2d coordinates that solve the 4 queens problem:")
         domain = list(range(0, 4))
 
@@ -103,6 +116,8 @@ class ConstraintSolverTests(unittest.TestCase):
         ), "Handchecked solution was not found in solutions."
 
     def test_kwargs_not_passed_twice(self):
+        r"""A test that the solver can correctly call functions with both globbed kwargs and named args."""
+
         def constraint1(b, **variables):
             return variables["a"] != 5 and b != 2
 
@@ -113,14 +128,17 @@ class ConstraintSolverTests(unittest.TestCase):
             assert solution == {"a": 1, "b": 3}
 
     def test_no_domains(self):
+        """Test that the solver raises an assertion if provided with an empty dict for variables and domains."""
         test_empty = lambda: list(solve({}))
         self.assertRaises(AssertionError, test_empty)
 
     def test_invalid_domain(self):
+        """Test that the solver raises an assertion when supplied an empty domain."""
         test_invalid = lambda: list(solve({"x": []}))
         self.assertRaises(AssertionError, test_invalid)
 
     def test_invalid_constraint(self):
+        """Test that the solver raises an assertion if a constraint needs a variable that isn't being solved for."""
         wrong_arg = lambda: list(solve({"x": [1]}, [lambda z: True]))
         self.assertRaises(AssertionError, wrong_arg)
 

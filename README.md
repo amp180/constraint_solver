@@ -1,8 +1,11 @@
 # Constraint solver
 
-A minimal constraint solver that  uses domain reduction.
+A minimal constraint solver that uses domain reduction.
 
-eg. 
+Module docs at https://amp180.github.io/constraint_solver/ 
+
+## Example
+
 ```
 from amp_constraint_solver import solve 
 
@@ -24,9 +27,18 @@ prints:
 {'a': 1, 'b': 2}
 ```
 
+## To install:
+Download wheel or sdist from https://github.com/amp180/constraint_solver/releases
+
+or on pip 19.0+
+
+```
+pip install git+https://github.com/amp180/constraint_solver.git
+```
+
 ## To build:
 ```
-pip install --user poetry 
+pip install --user poetry
 make build
 ```
 

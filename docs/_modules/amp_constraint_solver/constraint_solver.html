@@ -1,0 +1,296 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>amp_constraint_solver.constraint_solver &#8212; AMP Constraint Solver  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for amp_constraint_solver.constraint_solver</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Contains implementation of a domain reduction constraint resolver.</span>
+
+<span class="sd">Usage of :py:func:`solve`:</span>
+
+<span class="sd">&gt;&gt;&gt; from amp_constraint_solver import solve </span>
+<span class="sd">&gt;&gt;&gt; def constraint1(b, **variables):</span>
+<span class="sd">...     return variables[&#39;a&#39;] != 5 and b != 3</span>
+<span class="sd">... </span>
+<span class="sd">&gt;&gt;&gt; constraint2 = lambda a, b: a == b </span>
+<span class="sd">&gt;&gt;&gt; for solution in solve({&#39;a&#39;: [1, 5], &#39;b&#39;: [1, 2, 3]}, [constraint1, constraint2]):</span>
+<span class="sd">...    print(solution)</span>
+<span class="sd">... </span>
+<span class="sd">{&#39;a&#39;: 1, &#39;b&#39;: 1}</span>
+
+<span class="sd">Glossary: </span>
+
+<span class="sd">- variables: Things that are assigned values in a possible solution.</span>
+<span class="sd">- values: Possible values for variables in a solution.</span>
+<span class="sd">- domains: Bags of possible valid values for a variable.</span>
+<span class="sd">- constraints: Conditions that are used to check if solutions are valid.</span>
+
+<span class="sd">.. py:class:: ValueType</span>
+<span class="sd">   A type variable. Type of values being solved for. Used in the following generic types.</span>
+
+<span class="sd">.. py:class:: Domain</span>
+<span class="sd">   Type annotation for a list of values that can be assigned to a variable.</span>
+
+<span class="sd">.. py:class:: DomainsType</span>
+<span class="sd">   Type annotation for a dictionary of variable names mapped to a list of possible values (a domain).</span>
+
+<span class="sd">.. py:class:: SolutionsType</span>
+<span class="sd">   Type annotation for a dictionary of variable names mapped to values (a candidate solution.)</span>
+
+<span class="sd">.. py:class:: Constraint</span>
+<span class="sd">   Type annotation for a function that takes in parameters that share their name and type with variables</span>
+<span class="sd">   being solved for (or takes kwargs) and returns bool. Used to check if a solution is valid.</span>
+<span class="sd">   Should return true if valid arguments are passed, otherwise false.</span>
+
+<span class="sd">.. py:class:: SolutionGenerator</span>
+<span class="sd">   The type returned by `solve`, It&#39;s a generator of dicts that map variables to values </span>
+<span class="sd">   (a generator of SolutionType.).</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">cast</span> <span class="k">as</span> <span class="n">_cast</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="k">import</span> <span class="n">getfullargspec</span> <span class="k">as</span> <span class="n">_getfullargspec</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;solve&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ValueType&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Domain&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;DomainsType&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SolutionsType&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Constraint&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SolutionGenerator&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="c1">## Types</span>
+<span class="n">ValueType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;ValueType&quot;</span><span class="p">)</span>
+<span class="n">Domain</span> <span class="o">=</span> <span class="n">List</span><span class="p">[</span><span class="n">ValueType</span><span class="p">,]</span>
+<span class="n">DomainsType</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Domain</span><span class="p">]</span>
+<span class="n">SolutionsType</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ValueType</span><span class="p">]</span>
+<span class="n">Constraint</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span>
+<span class="n">SolutionGenerator</span> <span class="o">=</span> <span class="n">Generator</span><span class="p">[</span><span class="n">SolutionsType</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_assert_domain</span><span class="p">(</span><span class="n">domain</span><span class="p">:</span> <span class="n">Domain</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function that checks if a list is a valid domain.&quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="n">f</span><span class="s2">&quot;Domain must be a list, not { type(domain) }.&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
+        <span class="nb">set</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span>
+    <span class="p">),</span> <span class="n">f</span><span class="s2">&quot;Values in domain should be unique. </span><span class="se">\n</span><span class="s2">{ domain }&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Domains cannot be empty.&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_assert_constraint</span><span class="p">(</span><span class="n">constraint</span><span class="p">:</span> <span class="n">Constraint</span><span class="p">,</span> <span class="n">domains</span><span class="p">:</span> <span class="n">DomainsType</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function that checks if a constraint is valid.&quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">callable</span><span class="p">(</span><span class="n">constraint</span><span class="p">),</span> <span class="n">f</span><span class="s2">&quot;Constrints must be callable, </span><span class="si">{constraint}</span><span class="s2">&quot;</span>
+    <span class="n">argspec</span> <span class="o">=</span> <span class="n">_getfullargspec</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">argspec</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">domains</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{arg}</span><span class="s2"> is not a known variable.&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_assert_domains_and_constraints</span><span class="p">(</span>
+    <span class="n">domains</span><span class="p">:</span> <span class="n">DomainsType</span><span class="p">,</span> <span class="n">constraints</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Constraint</span><span class="p">]</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A function to assert that a group of domains and constraints are valid.&quot;&quot;&quot;</span>
+    <span class="c1"># Assert domains are valid.</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domains</span><span class="p">,</span> <span class="n">Dict</span><span class="p">),</span> <span class="s2">&quot;The domains arg must be a dict of str to list.&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">domains</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Domains dictionary cannot be empty.&quot;</span>
+    <span class="k">for</span> <span class="n">domain_to_check</span> <span class="ow">in</span> <span class="n">domains</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">_assert_domain</span><span class="p">(</span><span class="n">domain_to_check</span><span class="p">)</span>
+    <span class="c1"># Assert constraints are valid</span>
+    <span class="k">for</span> <span class="n">constraint_to_check</span> <span class="ow">in</span> <span class="n">constraints</span><span class="p">:</span>
+        <span class="n">_assert_constraint</span><span class="p">(</span><span class="n">constraint_to_check</span><span class="p">,</span> <span class="n">domains</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_constraints</span><span class="p">(</span><span class="n">variables</span><span class="p">:</span> <span class="n">SolutionsType</span><span class="p">,</span> <span class="n">constraints</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Constraint</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Function to check that a list of solution constraint checks are satisfied by a solution.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">constraints</span><span class="p">:</span>
+        <span class="c1"># Inspect the function</span>
+        <span class="n">argspec</span> <span class="o">=</span> <span class="n">_getfullargspec</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+
+        <span class="c1"># Build a list of positional args that match variable names</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">variables</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">argspec</span><span class="o">.</span><span class="n">args</span> <span class="k">if</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">argspec</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">else</span> <span class="p">[]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># If the function globs **kwargs, supply all variables not already passed as kwargs.</span>
+        <span class="n">all_vars</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">argspec</span><span class="o">.</span><span class="n">args</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">argspec</span><span class="o">.</span><span class="n">varkw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">{}</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">argspec</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+            <span class="c1"># Not all needed variables are assigned a value yet.</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Call the constraint and return false only if the check fails.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">constraint</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">all_vars</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<div class="viewcode-block" id="solve"><a class="viewcode-back" href="../../amp_constraint_solver.html#amp_constraint_solver.constraint_solver.solve">[docs]</a><span class="k">def</span> <span class="nf">solve</span><span class="p">(</span>
+    <span class="n">domains</span><span class="p">:</span> <span class="n">DomainsType</span><span class="p">,</span>
+    <span class="n">constraints</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Constraint</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">_sorted_variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">_current_solution</span><span class="p">:</span> <span class="n">SolutionsType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">sorted_function</span><span class="o">=</span><span class="nb">sorted</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SolutionGenerator</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A recursive generator function that yields solutions to a constraint solving problem,</span>
+<span class="sd">        using domain reduction.</span>
+
+<span class="sd">        eg.</span>
+
+<span class="sd">        &gt;&gt;&gt; from amp_constraint_solver import solve</span>
+<span class="sd">        &gt;&gt;&gt; list(solve({&#39;a&#39;: [1, 2], &#39;b&#39;: [1, 2]}, [(lambda a, b: a &gt; b),]))</span>
+<span class="sd">        [{&#39;a&#39;: 2, &#39;b&#39;: 1}]</span>
+
+
+<span class="sd">        :param domains: A dict of variable names to lists of possible assignments, :py:class:`DomainsType`.</span>
+<span class="sd">        :param constraints: A list of :py:class:`Constraint` functions to check possible solutions.</span>
+<span class="sd">        :param sorted_function: Can be used to override what order variables are assigned in. </span>
+<span class="sd">        :returns: A generator of candidate solutions. :py:data:`SolutionGenerator`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">_current_solution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_current_solution</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">_depth</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Assert args are valid</span>
+        <span class="n">_assert_domains_and_constraints</span><span class="p">(</span><span class="n">domains</span><span class="p">,</span> <span class="n">constraints</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">_depth</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">domains</span><span class="p">):</span>
+        <span class="c1"># Base case, all variables have been assigned and checked.</span>
+        <span class="k">yield</span> <span class="n">_current_solution</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Recursive case, choose the next variable in order and iterate over all values.</span>
+    <span class="n">sorted_variables</span> <span class="o">=</span> <span class="n">_sorted_variables</span> <span class="ow">or</span> <span class="n">sorted_function</span><span class="p">(</span><span class="n">domains</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">current_var</span> <span class="o">=</span> <span class="n">sorted_variables</span><span class="p">[</span><span class="n">_depth</span><span class="p">]</span>
+    <span class="n">current_domain</span> <span class="o">=</span> <span class="n">domains</span><span class="p">[</span><span class="n">current_var</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">current_domain</span><span class="p">:</span>
+        <span class="c1"># Create a new partial solution and check against constraints.</span>
+        <span class="n">current_solution</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_current_solution</span><span class="p">)</span>
+        <span class="n">current_solution</span><span class="p">[</span><span class="n">current_var</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">_check_constraints</span><span class="p">(</span><span class="n">current_solution</span><span class="p">,</span> <span class="n">constraints</span><span class="p">):</span>
+            <span class="c1"># Recurse to the next variable with the new partial solution.</span>
+            <span class="k">yield from</span> <span class="n">solve</span><span class="p">(</span>
+                <span class="n">domains</span><span class="p">,</span>
+                <span class="n">constraints</span><span class="p">,</span>
+                <span class="n">_sorted_variables</span><span class="o">=</span><span class="n">sorted_variables</span><span class="p">,</span>
+                <span class="n">_current_solution</span><span class="o">=</span><span class="n">current_solution</span><span class="p">,</span>
+                <span class="n">_depth</span><span class="o">=</span><span class="n">_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">AMP Constraint Solver</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Readme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Adam Pegman.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
