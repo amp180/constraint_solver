@@ -34,7 +34,7 @@ Installation
 ------------
 
 Download wheel or sdist from https://github.com/amp180/constraint_solver/releases
-a and install via `pip install ./file.whl`
+and install via `pip install ./file.whl`
 
 or on pip 19.0+
 
