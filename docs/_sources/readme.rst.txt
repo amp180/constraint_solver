@@ -1,5 +1,4 @@
 Readme
 ======
 
-.. include:: ../../README.md
-   :literal:
+.. include:: ../../README.rst
