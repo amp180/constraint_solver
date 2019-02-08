@@ -56,23 +56,29 @@
 <span class="sd">- constraints: Conditions that are used to check if solutions are valid.</span>
 
 <span class="sd">.. py:class:: ValueType</span>
+
 <span class="sd">   A type variable. Type of values being solved for. Used in the following generic types.</span>
 
 <span class="sd">.. py:class:: Domain</span>
+
 <span class="sd">   Type annotation for a list of values that can be assigned to a variable.</span>
 
 <span class="sd">.. py:class:: DomainsType</span>
+
 <span class="sd">   Type annotation for a dictionary of variable names mapped to a list of possible values (a domain).</span>
 
 <span class="sd">.. py:class:: SolutionsType</span>
+
 <span class="sd">   Type annotation for a dictionary of variable names mapped to values (a candidate solution.)</span>
 
 <span class="sd">.. py:class:: Constraint</span>
+
 <span class="sd">   Type annotation for a function that takes in parameters that share their name and type with variables</span>
 <span class="sd">   being solved for (or takes kwargs) and returns bool. Used to check if a solution is valid.</span>
 <span class="sd">   Should return true if valid arguments are passed, otherwise false.</span>
 
 <span class="sd">.. py:class:: SolutionGenerator</span>
+
 <span class="sd">   The type returned by `solve`, It&#39;s a generator of dicts that map variables to values </span>
 <span class="sd">   (a generator of SolutionType.).</span>
 
@@ -101,35 +107,40 @@
 <span class="n">SolutionGenerator</span> <span class="o">=</span> <span class="n">Generator</span><span class="p">[</span><span class="n">SolutionsType</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_assert_domain</span><span class="p">(</span><span class="n">domain</span><span class="p">:</span> <span class="n">Domain</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_validate_domain</span><span class="p">(</span><span class="n">domain</span><span class="p">:</span> <span class="n">Domain</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Function that checks if a list is a valid domain.&quot;&quot;&quot;</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="n">f</span><span class="s2">&quot;Domain must be a list, not { type(domain) }.&quot;</span>
-    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
-        <span class="nb">set</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span>
-    <span class="p">),</span> <span class="n">f</span><span class="s2">&quot;Values in domain should be unique. </span><span class="se">\n</span><span class="s2">{ domain }&quot;</span>
-    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Domains cannot be empty.&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Domain must be a list, not { type(domain) }.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">domain</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Values in domain should be unique. { domain }&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Domains cannot be empty.&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_assert_constraint</span><span class="p">(</span><span class="n">constraint</span><span class="p">:</span> <span class="n">Constraint</span><span class="p">,</span> <span class="n">domains</span><span class="p">:</span> <span class="n">DomainsType</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_validate_constraint</span><span class="p">(</span><span class="n">constraint</span><span class="p">:</span> <span class="n">Constraint</span><span class="p">,</span> <span class="n">domains</span><span class="p">:</span> <span class="n">DomainsType</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Function that checks if a constraint is valid.&quot;&quot;&quot;</span>
-    <span class="k">assert</span> <span class="n">callable</span><span class="p">(</span><span class="n">constraint</span><span class="p">),</span> <span class="n">f</span><span class="s2">&quot;Constrints must be callable, </span><span class="si">{constraint}</span><span class="s2">&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">constraint</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Constrints must be callable, </span><span class="si">{constraint}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">argspec</span> <span class="o">=</span> <span class="n">_getfullargspec</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">argspec</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">domains</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{arg}</span><span class="s2"> is not a known variable.&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">domains</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{arg}</span><span class="s2"> is not a known variable.&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_assert_domains_and_constraints</span><span class="p">(</span>
+<span class="k">def</span> <span class="nf">_validate_domains_and_constraints</span><span class="p">(</span>
     <span class="n">domains</span><span class="p">:</span> <span class="n">DomainsType</span><span class="p">,</span> <span class="n">constraints</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Constraint</span><span class="p">]</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A function to assert that a group of domains and constraints are valid.&quot;&quot;&quot;</span>
     <span class="c1"># Assert domains are valid.</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domains</span><span class="p">,</span> <span class="n">Dict</span><span class="p">),</span> <span class="s2">&quot;The domains arg must be a dict of str to list.&quot;</span>
-    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">domains</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Domains dictionary cannot be empty.&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domains</span><span class="p">,</span> <span class="n">Dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The domains arg must be a dict of str to list.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">domains</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Domains dictionary cannot be empty.&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">domain_to_check</span> <span class="ow">in</span> <span class="n">domains</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-        <span class="n">_assert_domain</span><span class="p">(</span><span class="n">domain_to_check</span><span class="p">)</span>
+        <span class="n">_validate_domain</span><span class="p">(</span><span class="n">domain_to_check</span><span class="p">)</span>
     <span class="c1"># Assert constraints are valid</span>
     <span class="k">for</span> <span class="n">constraint_to_check</span> <span class="ow">in</span> <span class="n">constraints</span><span class="p">:</span>
-        <span class="n">_assert_constraint</span><span class="p">(</span><span class="n">constraint_to_check</span><span class="p">,</span> <span class="n">domains</span><span class="p">)</span>
+        <span class="n">_validate_constraint</span><span class="p">(</span><span class="n">constraint_to_check</span><span class="p">,</span> <span class="n">domains</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_check_constraints</span><span class="p">(</span><span class="n">variables</span><span class="p">:</span> <span class="n">SolutionsType</span><span class="p">,</span> <span class="n">constraints</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Constraint</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -191,13 +202,14 @@
 <span class="sd">        :param constraints: A list of :py:class:`Constraint` functions to check possible solutions.</span>
 <span class="sd">        :param sorted_function: Can be used to override what order variables are assigned in. </span>
 <span class="sd">        :returns: A generator of candidate solutions. :py:data:`SolutionGenerator`</span>
+<span class="sd">        :raise ValueError: Invalid domains or constraints. See :py:mod:`amp_constraint_solver.test_constraint_solver`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">_current_solution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">_current_solution</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">_depth</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="c1"># Assert args are valid</span>
-        <span class="n">_assert_domains_and_constraints</span><span class="p">(</span><span class="n">domains</span><span class="p">,</span> <span class="n">constraints</span><span class="p">)</span>
+        <span class="n">_validate_domains_and_constraints</span><span class="p">(</span><span class="n">domains</span><span class="p">,</span> <span class="n">constraints</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">_depth</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">domains</span><span class="p">):</span>
         <span class="c1"># Base case, all variables have been assigned and checked.</span>

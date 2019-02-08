@@ -21,23 +21,29 @@ Glossary:
 - constraints: Conditions that are used to check if solutions are valid.
 
 .. py:class:: ValueType
+
    A type variable. Type of values being solved for. Used in the following generic types.
 
 .. py:class:: Domain
+
    Type annotation for a list of values that can be assigned to a variable.
 
 .. py:class:: DomainsType
+
    Type annotation for a dictionary of variable names mapped to a list of possible values (a domain).
 
 .. py:class:: SolutionsType
+
    Type annotation for a dictionary of variable names mapped to values (a candidate solution.)
 
 .. py:class:: Constraint
+
    Type annotation for a function that takes in parameters that share their name and type with variables
    being solved for (or takes kwargs) and returns bool. Used to check if a solution is valid.
    Should return true if valid arguments are passed, otherwise false.
 
 .. py:class:: SolutionGenerator
+
    The type returned by `solve`, It's a generator of dicts that map variables to values 
    (a generator of SolutionType.).
 
@@ -66,35 +72,40 @@ Constraint = Callable[..., bool]
 SolutionGenerator = Generator[SolutionsType, None, None]
 
 
-def _assert_domain(domain: Domain):
+def _validate_domain(domain: Domain):
     """Function that checks if a list is a valid domain."""
-    assert isinstance(domain, list), f"Domain must be a list, not { type(domain) }."
-    assert len(domain) == len(
-        set(domain)
-    ), f"Values in domain should be unique. \n{ domain }"
-    assert len(domain) > 0, "Domains cannot be empty."
+    if not isinstance(domain, list):
+        raise ValueError(f"Domain must be a list, not { type(domain) }.")
+    if not len(domain) == len(set(domain)):
+        raise ValueError(f"Values in domain should be unique. { domain }")
+    if not len(domain) > 0:
+        raise ValueError("Domains cannot be empty.")
 
 
-def _assert_constraint(constraint: Constraint, domains: DomainsType):
+def _validate_constraint(constraint: Constraint, domains: DomainsType):
     """Function that checks if a constraint is valid."""
-    assert callable(constraint), f"Constrints must be callable, {constraint}"
+    if not callable(constraint):
+        raise ValueError(f"Constrints must be callable, {constraint}")
     argspec = _getfullargspec(constraint)
     for arg in argspec.args:
-        assert arg in domains.keys(), f"{arg} is not a known variable."
+        if not arg in domains.keys():
+            raise ValueError(f"{arg} is not a known variable.")
 
 
-def _assert_domains_and_constraints(
+def _validate_domains_and_constraints(
     domains: DomainsType, constraints: List[Constraint]
 ):
     """A function to assert that a group of domains and constraints are valid."""
     # Assert domains are valid.
-    assert isinstance(domains, Dict), "The domains arg must be a dict of str to list."
-    assert len(domains.items()) > 0, "Domains dictionary cannot be empty."
+    if not isinstance(domains, Dict):
+        raise ValueError("The domains arg must be a dict of str to list.")
+    if not len(domains.items()) > 0:
+        raise ValueError("Domains dictionary cannot be empty.")
     for domain_to_check in domains.values():
-        _assert_domain(domain_to_check)
+        _validate_domain(domain_to_check)
     # Assert constraints are valid
     for constraint_to_check in constraints:
-        _assert_constraint(constraint_to_check, domains)
+        _validate_constraint(constraint_to_check, domains)
 
 
 def _check_constraints(variables: SolutionsType, constraints: List[Constraint]) -> bool:
@@ -156,13 +167,14 @@ def solve(
         :param constraints: A list of :py:class:`Constraint` functions to check possible solutions.
         :param sorted_function: Can be used to override what order variables are assigned in. 
         :returns: A generator of candidate solutions. :py:data:`SolutionGenerator`
+        :raise ValueError: Invalid domains or constraints. See :py:mod:`amp_constraint_solver.test_constraint_solver`
     """
     if _current_solution is None:
         _current_solution = dict()
 
     if _depth == 0:
         # Assert args are valid
-        _assert_domains_and_constraints(domains, constraints)
+        _validate_domains_and_constraints(domains, constraints)
 
     if _depth == len(domains):
         # Base case, all variables have been assigned and checked.

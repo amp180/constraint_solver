@@ -1,3 +1,5 @@
+"""Contains tests that demonstrate usage and assumptions."""
+
 import unittest
 import itertools
 from amp_constraint_solver.constraint_solver import *
@@ -128,19 +130,74 @@ class ConstraintSolverTests(unittest.TestCase):
             assert solution == {"a": 1, "b": 3}
 
     def test_no_domains(self):
-        """Test that the solver raises an assertion if provided with an empty dict for variables and domains."""
+        """Test that the solver raises an error if provided with an empty dict for variables and domains.
+
+        >>> from amp_constraint_solver import solve
+        >>> try: 
+        ...     list(solve({}))
+        ... except ValueError as e:
+        ...     print(e)
+        ...
+        Domains dictionary cannot be empty.
+        """
         test_empty = lambda: list(solve({}))
-        self.assertRaises(AssertionError, test_empty)
+        self.assertRaises(ValueError, test_empty)
+
+    def test_domain_not_list(self):
+        """Test that the solver raises an error when supplied with a domain that is not a list.
+
+        >>> from amp_constraint_solver import solve
+        >>> try: 
+        ...     list(solve({"x": 1}, [lambda z: True]))
+        ... except ValueError as e:
+        ...     print(e)
+        ...
+        Domain must be a list, not <class 'int'>.
+        """
+        test_invalid = lambda: list(solve({"x": None}))
+        self.assertRaises(ValueError, test_invalid)
 
     def test_invalid_domain(self):
-        """Test that the solver raises an assertion when supplied an empty domain."""
+        """Test that the solver raises an error when supplied an empty domain.
+
+        >>> from amp_constraint_solver import solve
+        >>> try: 
+        ...     list(solve({"x": []}))
+        ... except ValueError as e:
+        ...     print(e)
+        ... 
+        Domains cannot be empty.
+        """
         test_invalid = lambda: list(solve({"x": []}))
-        self.assertRaises(AssertionError, test_invalid)
+        self.assertRaises(ValueError, test_invalid)
+
+    def test_unique_values(self):
+        """Test that the solver raises an error when supplied a domain with repeated values
+
+        >>> from amp_constraint_solver import solve
+        >>> try: 
+        ...     list(solve({'x': [1, 1]}))
+        ... except ValueError as e:
+        ...     print(e)
+        ...
+        Values in domain should be unique. [1, 1]
+        """
+        test_invalid = lambda: list(solve({"x": [1, 1]}))
+        self.assertRaises(ValueError, test_invalid)
 
     def test_invalid_constraint(self):
-        """Test that the solver raises an assertion if a constraint needs a variable that isn't being solved for."""
+        """Test that the solver raises an error if a constraint needs a variable that isn't being solved for.
+
+        >>> from amp_constraint_solver import solve
+        >>> try: 
+        ...     list(solve({"x": [1]}, [lambda z: True]))
+        ... except ValueError as e:
+        ...     print(e)
+        ...
+        z is not a known variable.
+        """
         wrong_arg = lambda: list(solve({"x": [1]}, [lambda z: True]))
-        self.assertRaises(AssertionError, wrong_arg)
+        self.assertRaises(ValueError, wrong_arg)
 
 
 if __name__ == "__main__":

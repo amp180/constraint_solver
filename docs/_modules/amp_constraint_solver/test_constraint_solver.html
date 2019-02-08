@@ -33,7 +33,9 @@
           <div class="body" role="main">
             
   <h1>Source code for amp_constraint_solver.test_constraint_solver</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">unittest</span>
+<span></span><span class="sd">&quot;&quot;&quot;Contains tests that demonstrate usage and assumptions.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">unittest</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">from</span> <span class="nn">amp_constraint_solver.constraint_solver</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">amp_constraint_solver.builtin_constraints</span> <span class="k">import</span> <span class="o">*</span>
@@ -163,19 +165,74 @@
             <span class="k">assert</span> <span class="n">solution</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span></div>
 
 <div class="viewcode-block" id="ConstraintSolverTests.test_no_domains"><a class="viewcode-back" href="../../amp_constraint_solver.html#amp_constraint_solver.test_constraint_solver.ConstraintSolverTests.test_no_domains">[docs]</a>    <span class="k">def</span> <span class="nf">test_no_domains</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Test that the solver raises an assertion if provided with an empty dict for variables and domains.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Test that the solver raises an error if provided with an empty dict for variables and domains.</span>
+
+<span class="sd">        &gt;&gt;&gt; from amp_constraint_solver import solve</span>
+<span class="sd">        &gt;&gt;&gt; try: </span>
+<span class="sd">        ...     list(solve({}))</span>
+<span class="sd">        ... except ValueError as e:</span>
+<span class="sd">        ...     print(e)</span>
+<span class="sd">        ...</span>
+<span class="sd">        Domains dictionary cannot be empty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">test_empty</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">solve</span><span class="p">({}))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">AssertionError</span><span class="p">,</span> <span class="n">test_empty</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">test_empty</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConstraintSolverTests.test_domain_not_list"><a class="viewcode-back" href="../../amp_constraint_solver.html#amp_constraint_solver.test_constraint_solver.ConstraintSolverTests.test_domain_not_list">[docs]</a>    <span class="k">def</span> <span class="nf">test_domain_not_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test that the solver raises an error when supplied with a domain that is not a list.</span>
+
+<span class="sd">        &gt;&gt;&gt; from amp_constraint_solver import solve</span>
+<span class="sd">        &gt;&gt;&gt; try: </span>
+<span class="sd">        ...     list(solve({&quot;x&quot;: 1}, [lambda z: True]))</span>
+<span class="sd">        ... except ValueError as e:</span>
+<span class="sd">        ...     print(e)</span>
+<span class="sd">        ...</span>
+<span class="sd">        Domain must be a list, not &lt;class &#39;int&#39;&gt;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">test_invalid</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">solve</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">test_invalid</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ConstraintSolverTests.test_invalid_domain"><a class="viewcode-back" href="../../amp_constraint_solver.html#amp_constraint_solver.test_constraint_solver.ConstraintSolverTests.test_invalid_domain">[docs]</a>    <span class="k">def</span> <span class="nf">test_invalid_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Test that the solver raises an assertion when supplied an empty domain.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Test that the solver raises an error when supplied an empty domain.</span>
+
+<span class="sd">        &gt;&gt;&gt; from amp_constraint_solver import solve</span>
+<span class="sd">        &gt;&gt;&gt; try: </span>
+<span class="sd">        ...     list(solve({&quot;x&quot;: []}))</span>
+<span class="sd">        ... except ValueError as e:</span>
+<span class="sd">        ...     print(e)</span>
+<span class="sd">        ... </span>
+<span class="sd">        Domains cannot be empty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">test_invalid</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">solve</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">[]}))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">AssertionError</span><span class="p">,</span> <span class="n">test_invalid</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">test_invalid</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConstraintSolverTests.test_unique_values"><a class="viewcode-back" href="../../amp_constraint_solver.html#amp_constraint_solver.test_constraint_solver.ConstraintSolverTests.test_unique_values">[docs]</a>    <span class="k">def</span> <span class="nf">test_unique_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test that the solver raises an error when supplied a domain with repeated values</span>
+
+<span class="sd">        &gt;&gt;&gt; from amp_constraint_solver import solve</span>
+<span class="sd">        &gt;&gt;&gt; try: </span>
+<span class="sd">        ...     list(solve({&#39;x&#39;: [1, 1]}))</span>
+<span class="sd">        ... except ValueError as e:</span>
+<span class="sd">        ...     print(e)</span>
+<span class="sd">        ...</span>
+<span class="sd">        Values in domain should be unique. [1, 1]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">test_invalid</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">solve</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]}))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">test_invalid</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ConstraintSolverTests.test_invalid_constraint"><a class="viewcode-back" href="../../amp_constraint_solver.html#amp_constraint_solver.test_constraint_solver.ConstraintSolverTests.test_invalid_constraint">[docs]</a>    <span class="k">def</span> <span class="nf">test_invalid_constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Test that the solver raises an assertion if a constraint needs a variable that isn&#39;t being solved for.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Test that the solver raises an error if a constraint needs a variable that isn&#39;t being solved for.</span>
+
+<span class="sd">        &gt;&gt;&gt; from amp_constraint_solver import solve</span>
+<span class="sd">        &gt;&gt;&gt; try: </span>
+<span class="sd">        ...     list(solve({&quot;x&quot;: [1]}, [lambda z: True]))</span>
+<span class="sd">        ... except ValueError as e:</span>
+<span class="sd">        ...     print(e)</span>
+<span class="sd">        ...</span>
+<span class="sd">        z is not a known variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">wrong_arg</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">solve</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]},</span> <span class="p">[</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="kc">True</span><span class="p">]))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">AssertionError</span><span class="p">,</span> <span class="n">wrong_arg</span><span class="p">)</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">wrong_arg</span><span class="p">)</span></div></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>

@@ -196,3 +196,4 @@ epub_exclude_files = ["search.html"]
 
 
 # -- Extension configuration -------------------------------------------------
+viewcode_follow_imported_members = False

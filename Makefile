@@ -18,10 +18,12 @@ docs: installdeps sphinx
 	rm -rf docs/*
 	cd sphinx && make clean 
 	cd sphinx && make doctest
-	cd sphinx && make html
+	cd sphinx && make html epub latexpdf
 	mkdir -p docs
 	cp -R sphinx/build/html/* ./docs/
 	cp -R sphinx/build/html/\.[a-z]* ./docs/
+	cp -R sphinx/build/epub/*.epub ./dist/
+	cp -R sphinx/build/latex/*.pdf ./dist/
 
 installdeps:
 	poetry install
