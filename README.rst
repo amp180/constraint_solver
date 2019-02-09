@@ -3,6 +3,8 @@ Constraint solver
 
 A minimal constraint solver that uses domain reduction.
 
+Made to test out poetry, mypy, black, sphinx and doctest.
+
 Module docs at https://amp180.github.io/constraint_solver/ 
 
 Example
