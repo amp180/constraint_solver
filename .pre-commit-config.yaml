@@ -40,7 +40,7 @@ repos:
      language: system
      entry: bash -c "make html_docs && git add docs"
      pass_filenames: false
-     files: ^sphinx/
+     files: (^sphinx/)|(^README.rst)|(LICENSE)
 
 -   repo: meta
     hooks:

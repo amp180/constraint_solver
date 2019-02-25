@@ -68,7 +68,6 @@ Running pre-commit scripts for development
 
 .. code:: bash
 
-   pip install --user poetry
-   poetry shell
+   pip install --user poetry pre-commit
    pre-commit install
    pre-commit run -a
