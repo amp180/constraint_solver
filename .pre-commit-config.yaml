@@ -1,0 +1,48 @@
+exclude: ^docs/
+
+repos:
+-   repo: https://github.com/ambv/black
+    rev: stable
+    hooks:
+    - id: black
+      language_version: python3.7
+
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v0.670'
+    hooks:
+    -   id: mypy
+        exclude: ^sphinx/
+
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.1.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+
+- repo: local
+  hooks:
+  -  id: check_pyproject_toml
+     name: check_pyproject_toml
+     language: system
+     entry: poetry check
+     pass_filenames: false
+     files: ^pyproject.toml$
+
+  -  id: make_test
+     name: make_test
+     language: system
+     entry: make test
+     pass_filenames: false
+     files: ^amp_constraint_solver/
+
+  -  id: make_docs
+     name: make_docs
+     language: system
+     entry: bash -c "make html_docs && git add docs"
+     pass_filenames: false
+     files: ^sphinx/
+
+-   repo: meta
+    hooks:
+    -   id: check-hooks-apply
+    -   id: check-useless-excludes

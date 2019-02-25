@@ -3,17 +3,17 @@ Contains implementation of a domain reduction constraint resolver.
 
 Usage of :py:func:`solve`:
 
->>> from amp_constraint_solver import solve 
+>>> from amp_constraint_solver import solve
 >>> def constraint1(b, **variables):
 ...     return variables['a'] != 5 and b != 3
-... 
->>> constraint2 = lambda a, b: a == b 
+...
+>>> constraint2 = lambda a, b: a == b
 >>> for solution in solve({'a': [1, 5], 'b': [1, 2, 3]}, [constraint1, constraint2]):
 ...    print(solution)
-... 
+...
 {'a': 1, 'b': 1}
 
-Glossary: 
+Glossary:
 
 - variables: Things that are assigned values in a possible solution.
 - values: Possible values for variables in a solution.
@@ -44,11 +44,20 @@ Glossary:
 
 .. py:class:: SolutionGenerator
 
-   The type returned by `solve`, It's a generator of dicts that map variables to values 
+   The type returned by `solve`, It's a generator of dicts that map variables to values
    (a generator of SolutionType.).
 
 """
-from typing import cast as _cast, TypeVar, List, Dict, Set, Callable, Generator, Any
+from typing import (
+    cast as _cast,
+    TypeVar,
+    List,
+    Dict,
+    Set,
+    Callable,
+    Generator,
+    Any,
+)
 from inspect import getfullargspec as _getfullargspec
 
 
@@ -108,7 +117,9 @@ def _validate_domains_and_constraints(
         _validate_constraint(constraint_to_check, domains)
 
 
-def _check_constraints(variables: SolutionsType, constraints: List[Constraint]) -> bool:
+def _check_constraints(
+    variables: SolutionsType, constraints: List[Constraint]
+) -> bool:
     """Function to check that a list of solution constraint checks are satisfied by a solution."""
     for constraint in constraints:
         # Inspect the function
@@ -165,7 +176,7 @@ def solve(
 
         :param domains: A dict of variable names to lists of possible assignments, :py:class:`DomainsType`.
         :param constraints: A list of :py:class:`Constraint` functions to check possible solutions.
-        :param sorted_function: Can be used to override what order variables are assigned in. 
+        :param sorted_function: Can be used to override what order variables are assigned in.
         :returns: A generator of candidate solutions. :py:data:`SolutionGenerator`
         :raise ValueError: Invalid domains or constraints. See :py:mod:`amp_constraint_solver.test_constraint_solver`
     """

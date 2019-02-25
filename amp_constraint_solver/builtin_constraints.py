@@ -47,7 +47,7 @@ def make_vars_not_diagonal_on_grid_constraint(
     x1: str, y1: str, x2: str, y2: str
 ) -> Constraint:
     """A function that creates a constraint ensures that (x1, y1) is not diagonal with (x2, y2) on a positive grid.
-       
+
        :param x1: The variable name of the X coord of the first point.
        :param y1: The variable name of the Y coord of the first point.
        :param x2: The variable name of the X coord of the second point.

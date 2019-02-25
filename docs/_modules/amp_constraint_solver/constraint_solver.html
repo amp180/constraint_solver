@@ -38,17 +38,17 @@
 
 <span class="sd">Usage of :py:func:`solve`:</span>
 
-<span class="sd">&gt;&gt;&gt; from amp_constraint_solver import solve </span>
+<span class="sd">&gt;&gt;&gt; from amp_constraint_solver import solve</span>
 <span class="sd">&gt;&gt;&gt; def constraint1(b, **variables):</span>
 <span class="sd">...     return variables[&#39;a&#39;] != 5 and b != 3</span>
-<span class="sd">... </span>
-<span class="sd">&gt;&gt;&gt; constraint2 = lambda a, b: a == b </span>
+<span class="sd">...</span>
+<span class="sd">&gt;&gt;&gt; constraint2 = lambda a, b: a == b</span>
 <span class="sd">&gt;&gt;&gt; for solution in solve({&#39;a&#39;: [1, 5], &#39;b&#39;: [1, 2, 3]}, [constraint1, constraint2]):</span>
 <span class="sd">...    print(solution)</span>
-<span class="sd">... </span>
+<span class="sd">...</span>
 <span class="sd">{&#39;a&#39;: 1, &#39;b&#39;: 1}</span>
 
-<span class="sd">Glossary: </span>
+<span class="sd">Glossary:</span>
 
 <span class="sd">- variables: Things that are assigned values in a possible solution.</span>
 <span class="sd">- values: Possible values for variables in a solution.</span>
@@ -79,7 +79,7 @@
 
 <span class="sd">.. py:class:: SolutionGenerator</span>
 
-<span class="sd">   The type returned by `solve`, It&#39;s a generator of dicts that map variables to values </span>
+<span class="sd">   The type returned by `solve`, It&#39;s a generator of dicts that map variables to values</span>
 <span class="sd">   (a generator of SolutionType.).</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
@@ -200,7 +200,7 @@
 
 <span class="sd">        :param domains: A dict of variable names to lists of possible assignments, :py:class:`DomainsType`.</span>
 <span class="sd">        :param constraints: A list of :py:class:`Constraint` functions to check possible solutions.</span>
-<span class="sd">        :param sorted_function: Can be used to override what order variables are assigned in. </span>
+<span class="sd">        :param sorted_function: Can be used to override what order variables are assigned in.</span>
 <span class="sd">        :returns: A generator of candidate solutions. :py:data:`SolutionGenerator`</span>
 <span class="sd">        :raise ValueError: Invalid domains or constraints. See :py:mod:`amp_constraint_solver.test_constraint_solver`</span>
 <span class="sd">    &quot;&quot;&quot;</span>

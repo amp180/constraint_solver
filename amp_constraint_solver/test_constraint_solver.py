@@ -36,7 +36,7 @@ class ConstraintSolverTests(unittest.TestCase):
         ), "Solutions should form a cartesian product."
 
     def test_solve_x_ne_y(self):
-        """A test to check that the solver works correctly with a 
+        """A test to check that the solver works correctly with a
            :py:func:`amp_constraint_solver.builtin_constraints.make_vars_not_equal_constraint`."""
         print("Solving for values of x and y in range(1, 2) where x!=y:")
         solutions = list(
@@ -52,12 +52,14 @@ class ConstraintSolverTests(unittest.TestCase):
         ), "Solution should match reference, \n{solutions}\n"
 
     def test_lambda_solve_x_ne_y(self):
-        """A test to check that the solver works correctly with lambdas 
+        """A test to check that the solver works correctly with lambdas
            and can discover how to call them from their parameter names.
         """
         print("Testing that lambdas work:")
         solutions = list(
-            solve({"x": [1, 2], "y": [1, 2]}, constraints=[(lambda x, y: x != y)])
+            solve(
+                {"x": [1, 2], "y": [1, 2]}, constraints=[(lambda x, y: x != y)]
+            )
         )
         print(solutions)
         assert solutions, f"There should be a solution, \n{solutions}\n"
@@ -133,7 +135,7 @@ class ConstraintSolverTests(unittest.TestCase):
         """Test that the solver raises an error if provided with an empty dict for variables and domains.
 
         >>> from amp_constraint_solver import solve
-        >>> try: 
+        >>> try:
         ...     list(solve({}))
         ... except ValueError as e:
         ...     print(e)
@@ -147,7 +149,7 @@ class ConstraintSolverTests(unittest.TestCase):
         """Test that the solver raises an error when supplied with a domain that is not a list.
 
         >>> from amp_constraint_solver import solve
-        >>> try: 
+        >>> try:
         ...     list(solve({"x": 1}, [lambda z: True]))
         ... except ValueError as e:
         ...     print(e)
@@ -161,11 +163,11 @@ class ConstraintSolverTests(unittest.TestCase):
         """Test that the solver raises an error when supplied an empty domain.
 
         >>> from amp_constraint_solver import solve
-        >>> try: 
+        >>> try:
         ...     list(solve({"x": []}))
         ... except ValueError as e:
         ...     print(e)
-        ... 
+        ...
         Domains cannot be empty.
         """
         test_invalid = lambda: list(solve({"x": []}))
@@ -175,7 +177,7 @@ class ConstraintSolverTests(unittest.TestCase):
         """Test that the solver raises an error when supplied a domain with repeated values
 
         >>> from amp_constraint_solver import solve
-        >>> try: 
+        >>> try:
         ...     list(solve({'x': [1, 1]}))
         ... except ValueError as e:
         ...     print(e)
@@ -189,7 +191,7 @@ class ConstraintSolverTests(unittest.TestCase):
         """Test that the solver raises an error if a constraint needs a variable that isn't being solved for.
 
         >>> from amp_constraint_solver import solve
-        >>> try: 
+        >>> try:
         ...     list(solve({"x": [1]}, [lambda z: True]))
         ... except ValueError as e:
         ...     print(e)

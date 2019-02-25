@@ -15,14 +15,14 @@ Welcome to AMP Constraint Solver's documentation!
    license.rst
 
 ..
-  This next bit needs only blocks so there won't be a useless 
+  This next bit needs only blocks so there won't be a useless
   'indices and tables' entry in non-html builds.
 
 .. :only:: not html
-     
+
    .. toctree::
      :hidden:
-     
+
      :ref:`genindex`
      :ref:`modindex`
 

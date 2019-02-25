@@ -1,3 +1,5 @@
+pip-wheel-metadata
+.env
 *.egg-info
 **/.mypy_cache/**
 **/__pycache__/**

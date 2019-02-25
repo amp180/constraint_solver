@@ -39,4 +39,3 @@ amp\_constraint\_solver.test\_constraint\_solver module
     :members:
     :undoc-members:
     :show-inheritance:
-

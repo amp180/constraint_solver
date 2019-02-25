@@ -14,6 +14,24 @@ black = {version = "^18.3-alpha.0",allows-prereleases = true}
 sphinx = "^1.8"
 sphinx-autodoc-typehints = "^1.6"
 sphinx_rtd_theme = "^0.4.2"
+pre-commit = "^1.14"
+pip = "^19.0.3"
+
+[tool.black]
+line-length = 79
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | build
+  | dist
+  | doc
+)/
+'''
 
 [build-system]
 requires = ["poetry>=0.12"]
